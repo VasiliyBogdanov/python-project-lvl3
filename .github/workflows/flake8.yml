@@ -1,0 +1,17 @@
+name: flake8
+on: 
+  - push
+  - pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository content
+      uses: actions/checkout@v2
+    - name: install poetry
+      run: pip install poetry
+    - name: install dependencies
+      run: make install
+    - name: run linter
+      run: make lint
