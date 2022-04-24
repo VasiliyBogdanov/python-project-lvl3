@@ -22,8 +22,8 @@ def test_format_filename():
 def test_download():
     test_data_before = read_file('tests/fixtures/test_html_before.html')
     test_data_after = read_file('tests/fixtures/test_html_after.html')
-    test_img_png = read_file('tests/fixtures/python.png', mode='rb')
-    test_img_jpg = read_file('tests/fixtures/python.jpg', mode='rb')
+    test_img_png = read_file("tests/fixtures/python.png", mode='rb')
+    test_img_jpg = read_file("tests/fixtures/python.png", mode='rb')
     test_url = 'https://ru.hexlet.io/courses'
 
     with requests_mock.Mocker() as m:
@@ -45,7 +45,8 @@ def test_download():
             assert format_filename(test_url, '_files') in os.listdir(tmpdirname)
 
             # Test, that img was downloaded
-            downloaded_image_path = os.path.join(tmpdirname, os.listdir(tmpdirname)[0])
+            files_directory = list(i for i in os.listdir(tmpdirname) if i.endswith('_files'))[0]
+            downloaded_image_path = os.path.join(tmpdirname, files_directory)
             downloaded_image_dir = os.listdir(downloaded_image_path)
             assert 'assets-python.png' in downloaded_image_dir
             assert 'assets-python.jpg' in downloaded_image_dir
