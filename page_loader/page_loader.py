@@ -1,23 +1,28 @@
 from bs4 import BeautifulSoup
-from collections import namedtuple
-from page_loader.formatters import format_filename
-from page_loader.downloaders import download_resources
+from page_loader.logger import page_loader_logger
 import os
+from page_loader.formatters import format_filename
+from page_loader.tag_processors import process_tags
 import pathlib
 import requests
 
+logger = page_loader_logger
 
-def download(url: str, directory: str = None) -> str:
+
+def download(url: str, directory: str = None, *, log: bool = False) -> str:
+    if not log:
+        logger.disabled = True
     if directory is None:
         directory = os.getcwd()
     if not pathlib.Path(directory).exists():
         raise OSError("Directory does not exist")
 
-    content = requests.get(url).text
+    session = requests.Session()
+    content = session.get(url).text
 
     html_path = os.path.join(directory, format_filename(url, ext='.html'))
-    files_suffix = format_filename(url, ext='_files')
-    files_path = os.path.join(directory, files_suffix)
+    files_folder_name = format_filename(url, ext='_files')
+    files_path = os.path.join(directory, files_folder_name)
 
     # Create directory for downloaded files
     if not pathlib.Path(files_path).exists():
@@ -25,19 +30,10 @@ def download(url: str, directory: str = None) -> str:
 
     # Parse html for img tags
     soup = BeautifulSoup(content, 'html.parser')
-    images = soup.find_all('img', recursive=True)
-    links = soup.find_all('link', recursive=True)
-    scripts = soup.find_all('script', recursive=True)
+    resource_tags = soup.find_all(['img', 'link', 'script'])
 
-    _resources = namedtuple('Resources', 'images links scripts')
-    resources = _resources(images, links, scripts)
+    process_tags(resource_tags, session, url, files_path, files_folder_name)
 
-    session = requests.Session()
-
-    # Download AND modify html
-    download_resources(session, resources, url, files_path)
-
-    # Save modified html
     with open(html_path, mode='w') as output_html:
         output_html.write(soup.prettify())
 

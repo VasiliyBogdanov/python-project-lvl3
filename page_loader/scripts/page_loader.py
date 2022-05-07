@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from page_loader.parsers.cli_parser import cli_arg_parser
+from page_loader.cli_parser import cli_arg_parser
 
 
 def main():

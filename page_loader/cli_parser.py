@@ -11,9 +11,14 @@ def cli_arg_parser():
     parser.add_argument("--output",
                         help="Set output path",
                         default=os.getcwd())
+    parser.add_argument("--log",
+                        help="Set to True to enable create log file, "
+                             "default is False",
+                        default=False)
 
     args = parser.parse_args()
-    url, output_path = args.url, args.output
+    url, output_path, log = args.url, args.output, args.log
 
     print(download(url=url,
-                   directory=output_path))
+                   directory=output_path,
+                   log=log))

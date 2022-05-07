@@ -1,4 +1,5 @@
-from page_loader.page_loader import download, format_filename
+from page_loader.page_loader import download
+from page_loader.formatters import format_filename
 from collections import namedtuple
 import os
 import requests_mock
@@ -20,7 +21,7 @@ def test_format_filename():
 
 
 # Test download
-def test_download():
+def test_download(caplog):
     _RESOURCES = namedtuple('RESOURCES', 'img_png img_jpg app_css menu_css hw_js rel_path_script_js courses_html')
     RESOURCES = _RESOURCES('assets-python.png',
                            'assets-python.jpg',
@@ -35,7 +36,7 @@ def test_download():
     test_data_before = read_file('tests/fixtures/test_html_before.html')
     test_data_after = read_file('tests/fixtures/test_html_after.html')
     test_img_png = read_file("tests/fixtures/python.png", mode='rb')
-    test_img_jpg = read_file("tests/fixtures/python.png", mode='rb')
+    test_img_jpg = read_file("tests/fixtures/python.jpg", mode='rb')
     test_app_css = read_file("tests/fixtures/assets/application.css")
     test_menu_css = read_file("tests/fixtures/assets/menu.css")
     test_hw_js = read_file("tests/fixtures/hello_world.js")
@@ -43,16 +44,16 @@ def test_download():
     test_courses_html = test_data_before
 
     with requests_mock.Mocker() as m:
-        m.get(test_url, text=test_data_before)
-        m.get('https://ru.hexlet.io/courses/assets/python.png', text=str(test_img_png))
-        m.get('https://ru.hexlet.io/courses/assets/python.jpg', text=str(test_img_jpg))
-        m.get('https://ru.hexlet.io/assets/menu.css', text=test_menu_css)
-        m.get('https://ru.hexlet.io/assets/application.css', text=test_app_css)
-        m.get('https://ru.hexlet.io/rel_path_script.js', text=test_rel_path_js)
-        m.get('https://ru.hexlet.io/hello_world.js', text=test_hw_js)
+        m.register_uri('GET', test_url, text=test_data_before, reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/courses/assets/python.png', text=str(test_img_png), reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/courses/assets/python.jpg', text=str(test_img_jpg), reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/assets/menu.css', text=test_menu_css, reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/assets/application.css', text=test_app_css, reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/rel_path_script.js', text=test_rel_path_js, reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/hello_world.js', text=test_hw_js, reason='OK')
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            result = download(test_url, tmpdirname)
+            result = download(test_url, tmpdirname, log=True)
 
             # Test correctness of .html creation path
             assert result == os.path.join(tmpdirname, format_filename(test_url, '.html'))
@@ -65,7 +66,7 @@ def test_download():
             assert format_filename(test_url, '.html') in os.listdir(tmpdirname)
             assert format_filename(test_url, '_files') in os.listdir(tmpdirname)
 
-            # Test that files was downloaded
+            # Test that files were downloaded
             files_directory = list(i for i in os.listdir(tmpdirname) if i.endswith('_files'))[0]
             downloaded_files_path = os.path.join(tmpdirname, files_directory)
             downloaded_files_dir = os.listdir(downloaded_files_path)
@@ -103,3 +104,8 @@ def test_download():
             assert downloaded_rel_path_script_js == test_rel_path_js
 
             assert downloaded_courses_html == test_courses_html
+            # Test log messages (without time recorded)
+            with open('tests/fixtures/test_log_messages.log', mode='r') as f:
+                data = [i.strip() for i in f.readlines()]
+            assert caplog.messages == data
+            # TODO Test logging

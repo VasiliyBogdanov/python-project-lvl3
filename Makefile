@@ -5,7 +5,7 @@ build:
 package-install:
 	python -m pip install --user --force-reinstall dist/*.whl
 test:
-	poetry run pytest
+	poetry run pytest -vv
 test-coverage:
 	poetry run pytest --cov=page_loader --cov-report xml
 lint:
