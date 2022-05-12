@@ -20,6 +20,7 @@ def try_to_download(session, download_path, logger, bar):
     except (HTTPError, ConnectionError):
         bar.next()
         logger.error(sys.exc_info()[1])
+        raise
     else:
         bar.next()
         logger.info(f'{data_to_save.status_code} '
