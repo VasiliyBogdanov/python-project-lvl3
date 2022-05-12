@@ -12,6 +12,7 @@ from progress.bar import Bar
 import re
 import requests
 from requests import ConnectionError
+from requests import HTTPError
 import sys
 
 _resource_tags = namedtuple('Resources', 'img link script')
@@ -40,10 +41,13 @@ def download(url: str, directory: str = None, *, log: bool = False,
     url = url.rstrip('/')
 
     try:
-        content = session.get(url).text
-    except ConnectionError:
+        content = session.get(url)
+        content.raise_for_status()
+    except (HTTPError, ConnectionError):
         logger.error(sys.exc_info()[1])
         raise
+    else:
+        content = content.text
 
     html_path = os.path.join(directory,
                              format_filename(url,
