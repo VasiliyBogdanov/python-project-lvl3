@@ -42,69 +42,36 @@ def preprocess_tags(url, tags, tag_link_attr):
     return output
 
 
-def process_img_tag(img, session, url, files_path, logger, bar):
-    parsed_image = urlparse(img[K.TAG_LINKS.img])
+def process_tag(tag_link_attr, tag, session, url, files_path, logger, bar):
+    parsed_tag = urlparse(tag[tag_link_attr])
 
-    if is_absolute_path(url, img, K.TAG_LINKS.img):
-        file_to_save = img[K.TAG_LINKS.img]
+    if is_absolute_path(url, tag, tag_link_attr):
+        file_to_save = tag[tag_link_attr]
     else:
-        file_to_save = os.path.join(url, img[K.TAG_LINKS.img][1:])
+        file_to_save = os.path.join(url, tag[tag_link_attr][1:])\
+            if tag.name == K.TAG_NAMES.img\
+            else urljoin(url, parsed_tag.path)
 
-    filepath_to_save = format_filepath_to_save(parsed_image, files_path)
+    filepath_to_save = format_filepath_to_save(url, parsed_tag, files_path)
 
     data = try_to_download(session, file_to_save, logger, bar)
-    save_data(data.content, filepath_to_save, 'wb')
+    save_data(data.content if tag.name == K.TAG_NAMES.img else data.text,
+              filepath_to_save,
+              'wb' if tag.name == K.TAG_NAMES.img else 'w')
 
     img_path_modified = format_modified_path(url,
-                                             parsed_image.path,
+                                             parsed_tag.path
+                                             if tag.name == K.TAG_NAMES.img
+                                             else tag[tag_link_attr],
                                              K.FILES_FOLDER_SUFFIX)
-    img[K.TAG_LINKS.img] = img_path_modified
-
-
-def process_link_tag(link, session, url, files_path, logger, bar):
-    parsed_link = urlparse(link[K.TAG_LINKS.link])
-
-    filepath_to_save = format_filepath_to_save(parsed_link, files_path)
-
-    if is_absolute_path(url, link, K.TAG_LINKS.link):
-        file_to_save = link[K.TAG_LINKS.link]
-    else:
-        file_to_save = urljoin(url, parsed_link.path)
-
-    data = try_to_download(session, file_to_save, logger, bar)
-    save_data(data.text, filepath_to_save, 'w')
-
-    link_path_modified = format_modified_path(url,
-                                              link[K.TAG_LINKS.link],
-                                              K.FILES_FOLDER_SUFFIX)
-    link[K.TAG_LINKS.link] = link_path_modified
-
-
-def process_script_tag(script, session, url, files_path, logger, bar):
-    parsed_script = urlparse(script[K.TAG_LINKS.script])
-
-    filepath_to_save = format_filepath_to_save(parsed_script, files_path)
-
-    if is_absolute_path(url, script, K.TAG_LINKS.script):
-        file_to_save = script[K.TAG_LINKS.script]
-
-    else:
-        file_to_save = urljoin(url, parsed_script.path)
-
-    data = try_to_download(session, file_to_save, logger, bar)
-    save_data(data.text, filepath_to_save, 'w')
-
-    script_path_modified = format_modified_path(url,
-                                                script[K.TAG_LINKS.script],
-                                                K.FILES_FOLDER_SUFFIX)
-    script[K.TAG_LINKS.script] = script_path_modified
+    tag[tag_link_attr] = img_path_modified
 
 
 def process_tags(data, session, url, files_path, logger, bar):
     resources = session, url, files_path, logger, bar
-    for i in data.img:
-        process_img_tag(i, *resources)
-    for i in data.link:
-        process_link_tag(i, *resources)
-    for i in data.script:
-        process_script_tag(i, *resources)
+    for tag in data.img:
+        process_tag(K.TAG_LINKS.img, tag, *resources)
+    for tag in data.link:
+        process_tag(K.TAG_LINKS.link, tag, *resources)
+    for tag in data.script:
+        process_tag(K.TAG_LINKS.script, tag, *resources)

@@ -15,8 +15,6 @@ from requests import ConnectionError
 import sys
 
 _resource_tags = namedtuple('Resources', 'img link script')
-_tag_names = namedtuple('TAG', 'img link script')
-TAG_NAMES = _tag_names('img', 'link', 'script')
 
 logger = page_loader_logger
 
@@ -39,6 +37,7 @@ def download(url: str, directory: str = None, *, log: bool = False,
         logger.disabled = True
 
     session = requests.Session()
+    url = url.rstrip('/')
 
     try:
         content = session.get(url).text
@@ -58,14 +57,14 @@ def download(url: str, directory: str = None, *, log: bool = False,
 
     soup = BeautifulSoup(content, 'html.parser')
     img_tags = preprocess_tags(url,
-                               soup.find_all(TAG_NAMES.img,
+                               soup.find_all(K.TAG_NAMES.img,
                                              src=re.compile(r'\.jpg|\.png')),
                                K.TAG_LINKS.img)
     link_tags = preprocess_tags(url,
-                                soup.find_all(TAG_NAMES.link),
+                                soup.find_all(K.TAG_NAMES.link),
                                 K.TAG_LINKS.link)
     script_tags = preprocess_tags(url,
-                                  [i for i in soup.find_all(TAG_NAMES.script)
+                                  [i for i in soup.find_all(K.TAG_NAMES.script)
                                    if i.get(K.TAG_LINKS.script)],
                                   K.TAG_LINKS.script)
 

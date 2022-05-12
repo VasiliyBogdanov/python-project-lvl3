@@ -26,13 +26,13 @@ def read_file(path, mode='r'):
 
 
 _RESOURCES = namedtuple('RESOURCES', 'img_png img_jpg app_css menu_css hw_js rel_path_script_js courses_html')
-RESOURCES = _RESOURCES('assets-python.png',
-                       'assets-python.jpg',
-                       'assets-application.css',
-                       'assets-menu.css',
-                       'hello-world.js',
-                       'rel-path-script.js',
-                       'courses.html'
+RESOURCES = _RESOURCES('ru-hexlet-io-courses-assets-python.png',
+                       'ru-hexlet-io-courses-assets-python.jpg',
+                       'ru-hexlet-io-courses-assets-application.css',
+                       'ru-hexlet-io-courses-assets-menu.css',
+                       'ru-hexlet-io-courses-hello-world.js',
+                       'ru-hexlet-io-courses-rel-path-script.js',
+                       'ru-hexlet-io-courses-courses.html'
                        )
 
 test_url = 'https://ru.hexlet.io/courses'
@@ -50,17 +50,19 @@ test_courses_html = test_data_before
 def test_format_filename():
     url_without_extension = 'https://ru.hexlet.io/courses'
     url_with_extension = 'https://ru.hexlet.io/courses/about.html'
+    url_with_slash = 'https://ru.hexlet.io/courses/'
 
     assert format_filename(url_without_extension, '.html') == 'ru-hexlet-io-courses.html'
     assert format_filename(url_with_extension, '.html') == 'ru-hexlet-io-courses-about.html'
+    assert format_filename(url_with_slash, '.html') == 'ru-hexlet-io-courses.html'
 
 
 def test_directory_doesnt_exist():
     with tempfile.TemporaryDirectory() as tmpdirname:
         test_logger = make_test_logger(tmpdirname, 'test.log')
-        nonesistent_directory = os.path.join(tmpdirname, 'something')
+        nonexistent_directory = os.path.join(tmpdirname, 'something')
         with pytest.raises(OSError):
-            download(test_url, nonesistent_directory, log=True, logger=test_logger)
+            download(test_url, nonexistent_directory, log=True, logger=test_logger)
 
 
 # Test download

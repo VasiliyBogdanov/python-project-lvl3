@@ -43,9 +43,16 @@ def format_modified_path(home_url: str, url: str, files_suffix: str):
     return formatted_modified_path
 
 
-def format_filepath_to_save(link, files_path):
+def format_filepath_to_save(url, link, files_path):
     path, ext = os.path.splitext(link.path)
     ext = ext if ext else K.HTML_SUFFIX
-    filename_to_join = format_filename(path[1:], ext)
+    filename_to_join = format_filename(url, '-')\
+        + format_filename(path[1:], ext)
     filepath_to_save = os.path.join(files_path, filename_to_join)
     return filepath_to_save
+
+
+def format_host_name(home_url: str):
+    parsed_home_url = urlparse(home_url)
+    formatted_host = format_url(parsed_home_url.netloc)
+    return formatted_host
