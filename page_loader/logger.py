@@ -1,5 +1,7 @@
 import logging
 
+LOG_FORMAT = '%(asctime)s:%(name)s:%(message)s'
+
 
 def get_logger(name):
     logger = logging.getLogger(name)
@@ -11,19 +13,19 @@ def get_logger(name):
 def get_standard_file_handler(log_dir, delay=True, mode='a'):
     file_handler = logging.FileHandler(log_dir, delay=delay, mode=mode)
     file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(get_standard_log_formatter())
+    file_handler.setFormatter(get_file_log_formatter(LOG_FORMAT))
     return file_handler
 
 
 def get_standard_stream_handler():
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
-    stream_handler.setFormatter(get_standard_log_formatter())
+    stream_handler.setFormatter(get_file_log_formatter(' ' + LOG_FORMAT))
     return stream_handler
 
 
-def get_standard_log_formatter():
-    return logging.Formatter('%(asctime)s:%(name)s:%(message)s')
+def get_file_log_formatter(log_format):
+    return logging.Formatter(log_format)
 
 
 def get_main_logger():

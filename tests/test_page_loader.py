@@ -1,9 +1,10 @@
 from collections import namedtuple
 import os
 from page_loader.formatters import format_filename
+from page_loader.formatters import format_modified_path
 from page_loader.logger import get_logger
-from page_loader.logger import get_standard_stream_handler
 from page_loader.logger import get_standard_file_handler
+from page_loader.logger import get_standard_stream_handler
 from page_loader.page_loader import download
 import pathlib
 import pytest
@@ -46,7 +47,6 @@ test_rel_path_js = read_file("tests/fixtures/rel_path_script.js")
 test_courses_html = test_data_before
 
 
-# Test format_name
 def test_format_filename():
     url_without_extension = 'https://ru.hexlet.io/courses'
     url_with_extension = 'https://ru.hexlet.io/courses/about.html'
@@ -143,3 +143,14 @@ def test_wrong_file_rights():
         test_logger = make_test_logger(tmpdirname, 'test.log')
         with pytest.raises(PermissionError):
             download(test_url, permission_denied_path, log=True, logger=test_logger)
+
+
+def test_format_path():
+    # relative link
+    assert format_modified_path(test_url, "/assets/python.png", '_files') ==\
+           "ru-hexlet-io-courses_files/ru-hexlet-io-assets-python.png"
+    # absolute link to local resource
+    assert format_modified_path(test_url,
+                                "https://ru.hexlet.io/courses/hello_world.js",
+                                '_files') == \
+           "ru-hexlet-io-courses_files/ru-hexlet-io-courses-hello-world.js"

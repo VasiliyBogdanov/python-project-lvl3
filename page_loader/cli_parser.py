@@ -10,7 +10,7 @@ logger = page_loader_logger
 
 def cli_arg_parser():
     parser = argparse.ArgumentParser(
-        description="A little cli utility that lets you download web pages."
+        description="A little cli utility that lets you download static web pages." # noqa E501
     )
     parser.add_argument("url")
     parser.add_argument("--output",
