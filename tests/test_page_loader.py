@@ -8,6 +8,7 @@ from page_loader.logger import get_standard_stream_handler
 from page_loader.page_loader import download
 import pathlib
 import pytest
+from requests import HTTPError
 import requests_mock
 import tempfile
 
@@ -31,7 +32,7 @@ RESOURCES = _RESOURCES('ru-hexlet-io-courses-assets-python.png',
                        'ru-hexlet-io-courses-assets-application.css',
                        'ru-hexlet-io-courses-assets-menu.css',
                        'ru-hexlet-io-courses-hello-world.js',
-                       'ru-hexlet-io-courses-rel-path-script.js',
+                       'ru-hexlet-io-courses-relpathscript.js',
                        'ru-hexlet-io-courses-courses.html'
                        )
 
@@ -43,7 +44,7 @@ test_img_jpg = read_file("tests/fixtures/python.jpg", mode='rb')
 test_app_css = read_file("tests/fixtures/assets/application.css")
 test_menu_css = read_file("tests/fixtures/assets/menu.css")
 test_hw_js = read_file("tests/fixtures/hello_world.js")
-test_rel_path_js = read_file("tests/fixtures/rel_path_script.js")
+test_rel_path_js = read_file("tests/fixtures/relpathscript.js")
 test_courses_html = test_data_before
 
 
@@ -69,12 +70,13 @@ def test_directory_doesnt_exist():
 def test_download(caplog):
     with requests_mock.Mocker() as m:
         m.register_uri('GET', test_url, text=test_data_before, reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/courses/assets/python.png', text=str(test_img_png), reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/courses/assets/python.jpg', text=str(test_img_jpg), reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/assets/python.png', text=str(test_img_png), reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/assets/python.jpg', text=str(test_img_jpg), reason='OK')
         m.register_uri('GET', 'https://ru.hexlet.io/assets/menu.css', text=test_menu_css, reason='OK')
         m.register_uri('GET', 'https://ru.hexlet.io/assets/application.css', text=test_app_css, reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/rel_path_script.js', text=test_rel_path_js, reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/relpathscript.js', text=test_rel_path_js, reason='OK')
         m.register_uri('GET', 'https://ru.hexlet.io/hello_world.js', text=test_hw_js, reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/courses.html', text=test_courses_html, reason='OK')
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             test_logger = make_test_logger(tmpdirname, 'test.log')
@@ -156,3 +158,18 @@ def test_format_path():
                                 "https://ru.hexlet.io/courses/hello_world.js",
                                 '_files') == \
            "ru-hexlet-io-courses_files/ru-hexlet-io-courses-hello-world.js"
+
+
+def test_HTTPError():
+    with requests_mock.Mocker() as m:
+        m.register_uri('GET', test_url, text=test_data_before, reason='Client Error', status_code=404)
+        # m.register_uri('GET', 'https://ru.hexlet.io/courses/assets/python.png', text=str(test_img_png), reason='OK')
+        # m.register_uri('GET', 'https://ru.hexlet.io/courses/assets/python.jpg', text=str(test_img_jpg), reason='OK')
+        # m.register_uri('GET', 'https://ru.hexlet.io/assets/menu.css', text=test_menu_css, reason='OK')
+        # m.register_uri('GET', 'https://ru.hexlet.io/assets/application.css', text=test_app_css, reason='OK')
+        # m.register_uri('GET', 'https://ru.hexlet.io/rel_path_script.js', text=test_rel_path_js, reason='OK')
+        # m.register_uri('GET', 'https://ru.hexlet.io/hello_world.js', text=test_hw_js, reason='OK')
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            with pytest.raises(HTTPError):
+                download(test_url, tmpdirname)

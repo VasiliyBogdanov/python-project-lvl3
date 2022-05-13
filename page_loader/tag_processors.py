@@ -2,9 +2,17 @@ import page_loader.K as K
 from page_loader.formatters import format_modified_path
 from page_loader.formatters import format_filepath_to_save
 import os
-from page_loader.error_handler import try_to_download
+from page_loader.error_handler import try_to_download_tag
 from urllib.parse import urljoin
 from urllib.parse import urlparse
+
+
+def make_path_to_download(home_url: str, tag_url: str):
+    home_url = home_url if home_url.endswith('/') else home_url + '/'
+    path, ext = os.path.splitext(tag_url)
+    ext = ext if ext else '.html'
+    modified_tag_url = path + ext
+    return urljoin(home_url, modified_tag_url)
 
 
 def is_absolute_path(url, tag, tag_link_attr):
@@ -29,8 +37,6 @@ def save_data(data, path, mode):
     if data:
         with open(path, mode=mode) as f:
             f.write(data)
-    else:
-        return
 
 
 def preprocess_tags(url, tags, tag_link_attr):
@@ -48,13 +54,11 @@ def process_tag(tag_link_attr, tag, session, url, files_path, logger, bar):
     if is_absolute_path(url, tag, tag_link_attr):
         file_to_save = tag[tag_link_attr]
     else:
-        file_to_save = os.path.join(url, tag[tag_link_attr][1:])\
-            if tag.name == K.TAG_NAMES.img\
-            else urljoin(url, parsed_tag.path)
+        file_to_save = make_path_to_download(url, tag[tag_link_attr])
 
     filepath_to_save = format_filepath_to_save(url, parsed_tag, files_path)
 
-    data = try_to_download(session, file_to_save, logger, bar)
+    data = try_to_download_tag(session, file_to_save, logger, bar)
     save_data(data.content if tag.name == K.TAG_NAMES.img else data.text,
               filepath_to_save,
               'wb' if tag.name == K.TAG_NAMES.img else 'w')

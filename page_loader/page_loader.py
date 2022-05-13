@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
 from collections import namedtuple
-import page_loader.K as K
 import os
+import page_loader.K as K
+from page_loader.error_handler import try_to_download_page
 from page_loader.logger import page_loader_logger
 from page_loader.error_handler import make_error
 from page_loader.formatters import format_filename
@@ -11,9 +12,7 @@ import pathlib
 from progress.bar import Bar
 import re
 import requests
-from requests import ConnectionError
-from requests import HTTPError
-import sys
+
 
 _resource_tags = namedtuple('Resources', 'img link script')
 
@@ -40,14 +39,7 @@ def download(url: str, directory: str = None, *, log: bool = False,
     session = requests.Session()
     url = url.rstrip('/')
 
-    try:
-        content = session.get(url)
-        content.raise_for_status()
-    except (HTTPError, ConnectionError):
-        logger.error(sys.exc_info()[1])
-        raise
-    else:
-        content = content.text
+    content = try_to_download_page(session, url)
 
     html_path = os.path.join(directory,
                              format_filename(url,

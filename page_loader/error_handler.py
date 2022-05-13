@@ -13,7 +13,7 @@ def make_error(err_type, msg, logger):
         raise
 
 
-def try_to_download(session, download_path, logger, bar):
+def try_to_download_tag(session, download_path, logger, bar):
     try:
         data_to_save = session.get(download_path, stream=True)
         data_to_save.raise_for_status()
@@ -28,3 +28,14 @@ def try_to_download(session, download_path, logger, bar):
                     f'{download_path}')
 
         return data_to_save
+
+
+def try_to_download_page(session, url):
+    try:
+        content = session.get(url)
+        content.raise_for_status()
+    except (HTTPError, ConnectionError):
+        logger.error(sys.exc_info()[1])
+        raise
+    else:
+        return content.text
