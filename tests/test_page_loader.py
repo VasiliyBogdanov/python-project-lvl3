@@ -46,6 +46,7 @@ test_menu_css = read_file("tests/fixtures/assets/menu.css")
 test_hw_js = read_file("tests/fixtures/hello_world.js")
 test_rel_path_js = read_file("tests/fixtures/relpathscript.js")
 test_courses_html = test_data_before
+test_test_html = test_data_before
 
 
 def test_format_filename():
@@ -77,6 +78,7 @@ def test_download(caplog):
         m.register_uri('GET', 'https://ru.hexlet.io/relpathscript.js', text=test_rel_path_js, reason='OK')
         m.register_uri('GET', 'https://ru.hexlet.io/hello_world.js', text=test_hw_js, reason='OK')
         m.register_uri('GET', 'https://ru.hexlet.io/courses.html', text=test_courses_html, reason='OK')
+        m.register_uri('GET', 'https://ru.hexlet.io/test.html', text=test_test_html, reason='OK')
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             test_logger = make_test_logger(tmpdirname, 'test.log')

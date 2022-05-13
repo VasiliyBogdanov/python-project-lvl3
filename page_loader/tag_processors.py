@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 def make_path_to_download(home_url: str, tag_url: str):
     home_url = home_url if home_url.endswith('/') else home_url + '/'
     path, ext = os.path.splitext(tag_url)
-    ext = ext if ext else '.html'
+    ext = ext if (ext and ext != '.html') else '.html'
     modified_tag_url = path + ext
     return urljoin(home_url, modified_tag_url)
 
