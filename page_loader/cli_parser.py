@@ -13,11 +13,11 @@ def cli_arg_parser():
         description="A little cli utility that lets you download static web pages." # noqa E501
     )
     parser.add_argument("url")
-    parser.add_argument("--output",
+    parser.add_argument("-o", "--output",
                         help="Set output path, "
                              "default is current directory",
                         default=os.getcwd())
-    parser.add_argument("--log",
+    parser.add_argument("-l", "--log",
                         help="Set to True to enable create log file, "
                              "default is False",
                         default=False)
