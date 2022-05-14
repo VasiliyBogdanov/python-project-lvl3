@@ -1,3 +1,5 @@
+import pathlib
+
 import page_loader.K as K
 from page_loader.formatters import format_filename
 from page_loader.formatters import format_filepath_to_save
@@ -46,9 +48,8 @@ def is_external_link(home_url, tag, tag_link_attr):
 
 def save_data(data, path, mode):
     """Wrapper for saving data."""
-    if data:
-        with open(path, mode=mode) as f:
-            f.write(data)
+    with open(path, mode=mode) as f:
+        f.write(data)
 
 
 def preprocess_tags(url, tags, tag_link_attr):
@@ -74,14 +75,10 @@ def process_tag(tag_link_attr, tag, session, url, files_path, logger, bar):
     save_data(data.content if tag.name == K.TAG_NAMES.img else data.text,
               filepath_to_save,
               'wb' if tag.name == K.TAG_NAMES.img else 'w')
+
     modified_path = make_modified_path(url, tag[tag_link_attr])
-    # modified_path = format_modified_path(url,
-    #                                      parsed_tag.path
-    #                                      if tag.name == K.TAG_NAMES.img
-    #                                      else tag[tag_link_attr],
-    #                                      K.FILES_FOLDER_SUFFIX)
     tag[tag_link_attr] = modified_path
-# TODO Figure out right url conversion schema
+
 
 def process_tags(data, session, url, files_path, logger, bar):
     resources = session, url, files_path, logger, bar
