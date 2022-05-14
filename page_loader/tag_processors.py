@@ -72,10 +72,9 @@ def process_tag(tag_link_attr, tag, session, url, directory, logger, bar):
                                           tag[tag_link_attr])))
 
     data = try_to_download_tag(session, file_to_save, logger, bar)
-    save_data(data.content if tag.name == K.TAG_NAMES.img else data.text,
-              filepath_to_save,
-              'wb' if tag.name == K.TAG_NAMES.img else 'w')
-
+    save_data(data.content, filepath_to_save, 'wb')
+    #               'wb' if tag.name == K.TAG_NAMES.img else 'w'
+    # if tag.name == K.TAG_NAMES.img else data.text
     modified_path = make_modified_path(url, tag[tag_link_attr])
     tag[tag_link_attr] = modified_path
 
