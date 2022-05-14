@@ -10,7 +10,6 @@ from urllib.parse import urlparse
 def make_path_to_download(home_url: str, tag_url: str):
     home_url = home_url if home_url.endswith('/') else home_url + '/'
     path, ext = os.path.splitext(tag_url)
-    ext = ext if (ext and ext != '.html') else '.html'
     modified_tag_url = path + ext
     return urljoin(home_url, modified_tag_url)
 
@@ -63,13 +62,13 @@ def process_tag(tag_link_attr, tag, session, url, files_path, logger, bar):
               filepath_to_save,
               'wb' if tag.name == K.TAG_NAMES.img else 'w')
 
-    img_path_modified = format_modified_path(url,
-                                             parsed_tag.path
-                                             if tag.name == K.TAG_NAMES.img
-                                             else tag[tag_link_attr],
-                                             K.FILES_FOLDER_SUFFIX)
-    tag[tag_link_attr] = img_path_modified
-
+    modified_path = format_modified_path(url,
+                                         parsed_tag.path
+                                         if tag.name == K.TAG_NAMES.img
+                                         else tag[tag_link_attr],
+                                         K.FILES_FOLDER_SUFFIX)
+    tag[tag_link_attr] = modified_path
+# TODO Figure out right url conversion schema
 
 def process_tags(data, session, url, files_path, logger, bar):
     resources = session, url, files_path, logger, bar
