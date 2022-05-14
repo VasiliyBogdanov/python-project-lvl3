@@ -1,5 +1,4 @@
-import pathlib
-
+from pathlib import Path
 import page_loader.K as K
 from page_loader.formatters import format_filename
 from page_loader.formatters import format_filepath_to_save
@@ -48,6 +47,7 @@ def is_external_link(home_url, tag, tag_link_attr):
 
 def save_data(data, path, mode):
     """Wrapper for saving data."""
+    path = Path(path)
     with open(path, mode=mode) as f:
         f.write(data)
 

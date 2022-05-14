@@ -8,7 +8,7 @@ from page_loader.error_handler import make_error
 from page_loader.formatters import format_filename
 from page_loader.tag_processors import preprocess_tags
 from page_loader.tag_processors import process_tags
-import pathlib
+from pathlib import Path
 from progress.bar import Bar
 import re
 import requests
@@ -21,7 +21,7 @@ logger = page_loader_logger
 
 def download(url: str, directory: str = None, *, log: bool = False,
              logger=logger) -> str:
-    if not pathlib.Path(directory).exists():
+    if not Path(directory).exists():
         make_error(OSError,
                    f'Directory \'{directory}\' does not exist',
                    logger)
@@ -47,7 +47,7 @@ def download(url: str, directory: str = None, *, log: bool = False,
     files_path = os.path.join(directory,
                               files_folder_name)
 
-    pathlib.Path.mkdir(pathlib.Path(files_path), exist_ok=True)
+    Path.mkdir(Path(files_path), exist_ok=True)
 
     soup = BeautifulSoup(content, 'html.parser')
     img_tags = preprocess_tags(url,
