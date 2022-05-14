@@ -1,7 +1,6 @@
 from collections import namedtuple
 import os
 from page_loader.formatters import format_filename
-from page_loader.formatters import format_modified_path
 from page_loader.logger import get_logger
 from page_loader.logger import get_standard_file_handler
 from page_loader.logger import get_standard_stream_handler
@@ -54,9 +53,9 @@ def test_format_filename():
     url_with_extension = 'https://ru.hexlet.io/courses/about.html'
     url_with_slash = 'https://ru.hexlet.io/courses/'
 
-    assert format_filename(url_without_extension, '.html') == 'ru-hexlet-io-courses.html'
-    assert format_filename(url_with_extension, '.html') == 'ru-hexlet-io-courses-about.html'
-    assert format_filename(url_with_slash, '.html') == 'ru-hexlet-io-courses.html'
+    assert format_filename(url_without_extension) + '.html' == 'ru-hexlet-io-courses.html'
+    assert format_filename(url_with_extension) == 'ru-hexlet-io-courses-about.html'
+    assert format_filename(url_with_slash) + '.html' == 'ru-hexlet-io-courses.html'
 
 
 def test_directory_doesnt_exist():
@@ -85,15 +84,15 @@ def test_download(caplog):
             result = download(test_url, tmpdirname, log=True, logger=test_logger)
 
             # Test correctness of .html creation path
-            assert result == os.path.join(tmpdirname, format_filename(test_url, '.html'))
+            assert result == os.path.join(tmpdirname, format_filename(test_url) + '.html')
 
             # Test correctness of created .html structure
             result_html_data = read_file(result)
             assert test_data_after == result_html_data
 
             # Test that .html file and '_files' folder were created
-            assert format_filename(test_url, '.html') in os.listdir(tmpdirname)
-            assert format_filename(test_url, '_files') in os.listdir(tmpdirname)
+            assert format_filename(test_url) + '.html' in os.listdir(tmpdirname)
+            assert format_filename(test_url) + '_files' in os.listdir(tmpdirname)
 
             # Test that files were downloaded
             files_directory = list(i for i in os.listdir(tmpdirname) if i.endswith('_files'))[0]
@@ -151,26 +150,9 @@ def test_wrong_file_rights():
             download(test_url, permission_denied_path, log=True, logger=test_logger)
 
 
-def test_format_path():
-    # relative link
-    assert format_modified_path(test_url, "/assets/python.png", '_files') ==\
-           "ru-hexlet-io-courses_files/ru-hexlet-io-assets-python.png"
-    # absolute link to local resource
-    assert format_modified_path(test_url,
-                                "https://ru.hexlet.io/courses/hello_world.js",
-                                '_files') == \
-           "ru-hexlet-io-courses_files/ru-hexlet-io-courses-hello-world.js"
-
-
 def test_HTTPError():
     with requests_mock.Mocker() as m:
         m.register_uri('GET', test_url, text=test_data_before, reason='Client Error', status_code=404)
-        # m.register_uri('GET', 'https://ru.hexlet.io/courses/assets/python.png', text=str(test_img_png), reason='OK')
-        # m.register_uri('GET', 'https://ru.hexlet.io/courses/assets/python.jpg', text=str(test_img_jpg), reason='OK')
-        # m.register_uri('GET', 'https://ru.hexlet.io/assets/menu.css', text=test_menu_css, reason='OK')
-        # m.register_uri('GET', 'https://ru.hexlet.io/assets/application.css', text=test_app_css, reason='OK')
-        # m.register_uri('GET', 'https://ru.hexlet.io/rel_path_script.js', text=test_rel_path_js, reason='OK')
-        # m.register_uri('GET', 'https://ru.hexlet.io/hello_world.js', text=test_hw_js, reason='OK')
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             with pytest.raises(HTTPError):

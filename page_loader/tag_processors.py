@@ -1,5 +1,5 @@
 import page_loader.K as K
-from page_loader.formatters import format_modified_path
+from page_loader.formatters import format_filename
 from page_loader.formatters import format_filepath_to_save
 import os
 from page_loader.error_handler import try_to_download_tag
@@ -7,11 +7,24 @@ from urllib.parse import urljoin
 from urllib.parse import urlparse
 
 
+def make_modified_path(home_url, tag_url):
+    host = urlparse(home_url).netloc
+    left_side = format_filename(home_url) + K.FILES_FOLDER_SUFFIX
+    path, ext = os.path.splitext(tag_url)
+    path = path[1:] if path.startswith('/') else path
+
+    if urlparse(path).scheme:
+        right_side = format_filename(path) + ext
+    elif not urlparse(path).scheme and not ext:
+        right_side = format_filename(home_url) + K.HTML_SUFFIX
+    else:
+        right_side = format_filename(os.path.join(format_filename(host), path)) + ext
+    return os.path.join(left_side, right_side)
+
+
 def make_path_to_download(home_url: str, tag_url: str):
     home_url = home_url if home_url.endswith('/') else home_url + '/'
-    path, ext = os.path.splitext(tag_url)
-    modified_tag_url = path + ext
-    return urljoin(home_url, modified_tag_url)
+    return urljoin(home_url, tag_url)
 
 
 def is_absolute_path(url, tag, tag_link_attr):
@@ -61,12 +74,12 @@ def process_tag(tag_link_attr, tag, session, url, files_path, logger, bar):
     save_data(data.content if tag.name == K.TAG_NAMES.img else data.text,
               filepath_to_save,
               'wb' if tag.name == K.TAG_NAMES.img else 'w')
-
-    modified_path = format_modified_path(url,
-                                         parsed_tag.path
-                                         if tag.name == K.TAG_NAMES.img
-                                         else tag[tag_link_attr],
-                                         K.FILES_FOLDER_SUFFIX)
+    modified_path = make_modified_path(url, tag[tag_link_attr])
+    # modified_path = format_modified_path(url,
+    #                                      parsed_tag.path
+    #                                      if tag.name == K.TAG_NAMES.img
+    #                                      else tag[tag_link_attr],
+    #                                      K.FILES_FOLDER_SUFFIX)
     tag[tag_link_attr] = modified_path
 # TODO Figure out right url conversion schema
 

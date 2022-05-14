@@ -42,10 +42,8 @@ def download(url: str, directory: str = None, *, log: bool = False,
     content = try_to_download_page(session, url)
 
     html_path = os.path.join(directory,
-                             format_filename(url,
-                                             ext=K.HTML_SUFFIX))
-    files_folder_name = format_filename(url,
-                                        ext=K.FILES_FOLDER_SUFFIX)
+                             format_filename(url)) + K.HTML_SUFFIX
+    files_folder_name = format_filename(url) + K.FILES_FOLDER_SUFFIX
     files_path = os.path.join(directory,
                               files_folder_name)
 
