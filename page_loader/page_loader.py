@@ -41,13 +41,13 @@ def download(url: str, directory: str = None, *, log: bool = False,
 
     content = try_to_download_page(session, url)
 
-    html_path = os.path.join(directory,
-                             format_filename(url)) + K.HTML_SUFFIX
+    html_path = Path(os.path.join(directory,
+                                  format_filename(url))
+                     + K.HTML_SUFFIX)
     files_folder_name = format_filename(url) + K.FILES_FOLDER_SUFFIX
-    files_path = os.path.join(directory,
-                              files_folder_name)
+    files_path = Path(os.path.join(directory, files_folder_name))
 
-    Path.mkdir(Path(files_path), exist_ok=True)
+    Path.mkdir(files_path, exist_ok=True)
 
     soup = BeautifulSoup(content, 'html.parser')
     img_tags = preprocess_tags(url,
@@ -68,7 +68,7 @@ def download(url: str, directory: str = None, *, log: bool = False,
                         *resource_tags.script])
 
     bar = Bar(max=resource_len)
-    process_tags(resource_tags, session, url, files_path,
+    process_tags(resource_tags, session, url, directory,
                  logger, bar)
 
     with open(html_path, mode='w') as output_html:
@@ -76,4 +76,4 @@ def download(url: str, directory: str = None, *, log: bool = False,
 
     bar.finish()
 
-    return html_path
+    return str(html_path)

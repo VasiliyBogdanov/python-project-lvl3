@@ -1,7 +1,6 @@
-from pathlib import Path
 import page_loader.K as K
 from page_loader.formatters import format_filename
-from page_loader.formatters import format_filepath_to_save
+from pathlib import Path
 import os
 from page_loader.error_handler import try_to_download_tag
 from urllib.parse import urljoin
@@ -19,7 +18,8 @@ def make_modified_path(home_url, tag_url):
     elif not urlparse(path).scheme and not ext:
         right_side = format_filename(home_url) + K.HTML_SUFFIX
     else:
-        right_side = format_filename(os.path.join(format_filename(host), path)) + ext
+        right_side = format_filename(os.path.join(format_filename(host),
+                                                  path)) + ext
     return os.path.join(left_side, right_side)
 
 
@@ -47,7 +47,6 @@ def is_external_link(home_url, tag, tag_link_attr):
 
 def save_data(data, path, mode):
     """Wrapper for saving data."""
-    path = Path(path)
     with open(path, mode=mode) as f:
         f.write(data)
 
@@ -61,15 +60,16 @@ def preprocess_tags(url, tags, tag_link_attr):
     return output
 
 
-def process_tag(tag_link_attr, tag, session, url, files_path, logger, bar):
-    parsed_tag = urlparse(tag[tag_link_attr])
-
+def process_tag(tag_link_attr, tag, session, url, directory, logger, bar):
     if is_absolute_path(url, tag, tag_link_attr):
         file_to_save = tag[tag_link_attr]
     else:
         file_to_save = make_path_to_download(url, tag[tag_link_attr])
 
-    filepath_to_save = format_filepath_to_save(url, parsed_tag, files_path)
+    filepath_to_save = Path\
+        .joinpath(Path(directory),
+                  Path(make_modified_path(url,
+                                          tag[tag_link_attr])))
 
     data = try_to_download_tag(session, file_to_save, logger, bar)
     save_data(data.content if tag.name == K.TAG_NAMES.img else data.text,
@@ -80,8 +80,8 @@ def process_tag(tag_link_attr, tag, session, url, files_path, logger, bar):
     tag[tag_link_attr] = modified_path
 
 
-def process_tags(data, session, url, files_path, logger, bar):
-    resources = session, url, files_path, logger, bar
+def process_tags(data, session, url, directory, logger, bar):
+    resources = session, url, directory, logger, bar
     for tag in data.img:
         process_tag(K.TAG_LINKS.img, tag, *resources)
     for tag in data.link:

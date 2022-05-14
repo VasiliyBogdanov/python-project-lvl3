@@ -6,6 +6,7 @@ from page_loader.logger import get_standard_file_handler
 from page_loader.logger import get_standard_stream_handler
 from page_loader.page_loader import download
 import pathlib
+from pathlib import Path
 import pytest
 from requests import HTTPError
 import requests_mock
@@ -26,13 +27,13 @@ def read_file(path, mode='r'):
 
 
 _RESOURCES = namedtuple('RESOURCES', 'img_png img_jpg app_css menu_css hw_js rel_path_script_js courses_html')
-RESOURCES = _RESOURCES('ru-hexlet-io-courses-assets-python.png',
-                       'ru-hexlet-io-courses-assets-python.jpg',
-                       'ru-hexlet-io-courses-assets-application.css',
-                       'ru-hexlet-io-courses-assets-menu.css',
-                       'ru-hexlet-io-courses-hello-world.js',
-                       'ru-hexlet-io-courses-relpathscript.js',
-                       'ru-hexlet-io-courses-courses.html'
+RESOURCES = _RESOURCES('ru-hexlet-io-assets-python.png',
+                       'ru-hexlet-io-assets-python.jpg',
+                       'ru-hexlet-io-assets-application.css',
+                       'ru-hexlet-io-assets-menu.css',
+                       'ru-hexlet-io-hello-world.js',
+                       'ru-hexlet-io-relpathscript.js',
+                       'ru-hexlet-io-courses.html'
                        )
 
 test_url = 'https://ru.hexlet.io/courses'
@@ -84,7 +85,7 @@ def test_download(caplog):
             result = download(test_url, tmpdirname, log=True, logger=test_logger)
 
             # Test correctness of .html creation path
-            assert result == os.path.join(tmpdirname, format_filename(test_url) + '.html')
+            assert Path(result) == Path(os.path.join(tmpdirname, format_filename(test_url) + '.html'))
 
             # Test correctness of created .html structure
             result_html_data = read_file(result)

@@ -1,4 +1,3 @@
-import page_loader.K as K
 import os
 import string
 from urllib.parse import urlparse
@@ -22,15 +21,6 @@ def format_url(elem: str):
                              else FILENAME_DELIMITER
                              for i in elem)
     return formatted_elem
-
-
-def format_filepath_to_save(url, link, files_path):
-    path, ext = os.path.splitext(link.path)
-    ext = ext if ext else K.HTML_SUFFIX
-    filename_to_join = format_filename(url) + '-'\
-        + format_filename(path[1:]) + ext
-    filepath_to_save = os.path.join(files_path, filename_to_join)
-    return filepath_to_save
 
 
 def format_host_name(home_url: str):
