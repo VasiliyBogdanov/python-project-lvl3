@@ -18,7 +18,7 @@ def cli_arg_parser() -> None:
                              "default is current working directory",
                         default=os.getcwd())
     parser.add_argument("-l", "--log",
-                        help="Set to True to enable create log file, "
+                        help="Set to True to create log file, "
                              "default is False",
                         default=False)
 
