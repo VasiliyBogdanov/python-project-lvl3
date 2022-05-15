@@ -1,14 +1,11 @@
 from collections import namedtuple
 import os
-from page_loader.formatters import format_filename
+from page_loader.formatters import format_host_name
 from page_loader.logger import get_logger
 from page_loader.logger import get_standard_file_handler
 from page_loader.logger import get_standard_stream_handler
 from page_loader.page_loader import download
-import pathlib
 from pathlib import Path
-import pytest
-from requests import HTTPError
 import requests_mock
 import tempfile
 
@@ -49,25 +46,6 @@ test_courses_html = test_data_before
 test_test_html = test_data_before
 
 
-def test_format_filename():
-    url_without_extension = 'https://ru.hexlet.io/courses'
-    url_with_extension = 'https://ru.hexlet.io/courses/about.html'
-    url_with_slash = 'https://ru.hexlet.io/courses/'
-
-    assert format_filename(url_without_extension) + '.html' == 'ru-hexlet-io-courses.html'
-    assert format_filename(url_with_extension) == 'ru-hexlet-io-courses-about.html'
-    assert format_filename(url_with_slash) + '.html' == 'ru-hexlet-io-courses.html'
-
-
-def test_directory_doesnt_exist():
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        test_logger = make_test_logger(tmpdirname, 'test.log')
-        nonexistent_directory = os.path.join(tmpdirname, 'something')
-        with pytest.raises(OSError):
-            download(test_url, nonexistent_directory, log=True, logger=test_logger)
-
-
-# Test download
 def test_download(caplog):
     with requests_mock.Mocker() as m:
         m.register_uri('GET', test_url, text=test_data_before, reason='OK')
@@ -85,15 +63,15 @@ def test_download(caplog):
             result = download(test_url, tmpdirname, log=True, logger=test_logger)
 
             # Test correctness of .html creation path
-            assert Path(result) == Path(os.path.join(tmpdirname, format_filename(test_url) + '.html'))
+            assert Path(result) == Path(os.path.join(tmpdirname, format_host_name(test_url) + '.html'))
 
             # Test correctness of created .html structure
             result_html_data = read_file(result)
             assert test_data_after == result_html_data
 
             # Test that .html file and '_files' folder were created
-            assert format_filename(test_url) + '.html' in os.listdir(tmpdirname)
-            assert format_filename(test_url) + '_files' in os.listdir(tmpdirname)
+            assert format_host_name(test_url) + '.html' in os.listdir(tmpdirname)
+            assert format_host_name(test_url) + '_files' in os.listdir(tmpdirname)
 
             # Test that files were downloaded
             files_directory = list(i for i in os.listdir(tmpdirname) if i.endswith('_files'))[0]
@@ -138,23 +116,3 @@ def test_download(caplog):
             with open('tests/fixtures/test_log_messages.log', mode='r') as f:
                 data = [i.strip() for i in f.readlines()]
             assert caplog.messages == data
-
-
-def test_wrong_file_rights():
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        directory = pathlib.Path(tmpdirname)
-        directory.chmod(444)
-        permission_denied_path = os.path.join(directory, 'test')
-
-        test_logger = make_test_logger(tmpdirname, 'test.log')
-        with pytest.raises(PermissionError):
-            download(test_url, permission_denied_path, log=True, logger=test_logger)
-
-
-def test_HTTPError():
-    with requests_mock.Mocker() as m:
-        m.register_uri('GET', test_url, text=test_data_before, reason='Client Error', status_code=404)
-
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            with pytest.raises(HTTPError):
-                download(test_url, tmpdirname)

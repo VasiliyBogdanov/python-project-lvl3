@@ -8,3 +8,5 @@ TAG_LINKS = _TAGS('src', 'href', 'src')
 
 FILES_FOLDER_SUFFIX = '_files'
 HTML_SUFFIX = '.html'
+
+_resource_tags = namedtuple('Resources', 'img link script')
