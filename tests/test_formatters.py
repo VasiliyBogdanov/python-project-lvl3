@@ -15,6 +15,8 @@ def test_format_filename(test_input, expected):
     (format_host_name('https://ru.hexlet.io/courses'), 'ru-hexlet-io-courses'),
     (format_host_name('https://ru.hexlet.io/courses/'), 'ru-hexlet-io-courses'),
     (format_host_name('https://ru.hexlet.io'), 'ru-hexlet-io'),
+    (format_host_name('https://page-loader.hexlet.repl.co'), 'page-loader-hexlet-repl-co'),
+    (format_host_name('https://page-loader.hexlet.repl.co/'), 'page-loader-hexlet-repl-co')
 ])
 def test_format_host_name(test_input, expected):
     assert test_input == expected

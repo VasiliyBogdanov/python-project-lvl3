@@ -18,14 +18,13 @@ from urllib.parse import urlparse
 def make_modified_path(home_url: str,
                        tag_url: str) -> str:
     host = urlparse(home_url).netloc
-    left_side = format_host_name(home_url) + K.FILES_FOLDER_SUFFIX
+    left_side = format_host_name(home_url) + '_files'
     path, ext = os.path.splitext(tag_url)
     path = path[1:] if path.startswith('/') else path
+    ext = ext if ext else '.html'
 
     if urlparse(path).scheme:
         right_side = format_filename(path) + ext
-    elif not urlparse(path).scheme and not ext:
-        right_side = format_filename(home_url) + K.HTML_SUFFIX
     else:
         right_side = format_host_name(os.path.join(format_host_name(host),
                                                    path)) + ext
