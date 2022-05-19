@@ -8,7 +8,6 @@ from tests.conftest import RESOURCES
 from tests.conftest import TEST_DATA
 
 
-
 def test_download_path_creation(tmpdirname):
     result = download(TEST_DATA.test_url, tmpdirname)
 
