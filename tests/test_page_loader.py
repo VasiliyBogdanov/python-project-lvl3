@@ -1,112 +1,70 @@
-from collections import namedtuple
 import os
 from page_loader.formatters import format_host_name
 from page_loader.page_loader import download
+from page_loader.processors import HTML_SUFFIX, FILES_FOLDER_SUFFIX
 from pathlib import Path
-import pytest
-import requests_mock
-import tempfile
+from tests.conftest import read_file
+from tests.conftest import RESOURCES
+from tests.conftest import TEST_DATA
 
 
-def read_file(path, mode='r'):
-    with open(path, mode=mode) as f:
-        return str(f.read()).strip()
+
+def test_download_path_creation(tmpdirname):
+    result = download(TEST_DATA.test_url, tmpdirname)
+
+    assert Path(result) == Path(os.path.join(tmpdirname, format_host_name(TEST_DATA.test_url) + '.html'))
 
 
-_RESOURCES = namedtuple('RESOURCES', 'img_png img_jpg app_css menu_css hw_js rel_path_script_js courses_html')
-RESOURCES = _RESOURCES('ru-hexlet-io-assets-python.png',
-                       'ru-hexlet-io-assets-python.jpg',
-                       'ru-hexlet-io-assets-application.css',
-                       'ru-hexlet-io-assets-menu.css',
-                       'ru-hexlet-io-hello-world.js',
-                       'ru-hexlet-io-relpathscript.js',
-                       'ru-hexlet-io-courses.html',
-                       )
-
-test_url = 'https://ru.hexlet.io/courses'
-test_data_before = read_file('tests/fixtures/test_html_before.html')
-test_data_after = read_file('tests/fixtures/test_html_after.html')
-test_img_png = read_file("tests/fixtures/python.png", mode='rb')
-test_img_jpg = read_file("tests/fixtures/python.jpg", mode='rb')
-test_app_css = read_file("tests/fixtures/assets/application.css")
-test_menu_css = read_file("tests/fixtures/assets/menu.css")
-test_hw_js = read_file("tests/fixtures/hello_world.js")
-test_rel_path_js = read_file("tests/fixtures/relpathscript.js")
-test_courses_html = test_data_before
-test_test_html = test_data_before
-
-
-@pytest.fixture
-def tmpdirname():
-    with requests_mock.Mocker() as m:
-        m.register_uri('GET', test_url, text=test_data_before, reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/assets/python.png', text=str(test_img_png), reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/assets/python.jpg', text=str(test_img_jpg), reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/assets/menu.css', text=test_menu_css, reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/assets/application.css', text=test_app_css, reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/relpathscript.js', text=test_rel_path_js, reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/hello_world.js', text=test_hw_js, reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/courses.html', text=test_courses_html, reason='OK')
-        m.register_uri('GET', 'https://ru.hexlet.io/test.html', text=test_test_html, reason='OK')
-
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            yield tmpdirname
-
-
-def test_download(caplog, tmpdirname):
-    result = download(test_url, tmpdirname)
-
-    # Test correctness of .html creation path
-    assert Path(result) == Path(os.path.join(tmpdirname, format_host_name(test_url) + '.html'))
-
-    # Test correctness of created .html structure
+def test_downloaded_html_structure(tmpdirname):
+    result = download(TEST_DATA.test_url, tmpdirname)
     result_html_data = read_file(result)
-    assert test_data_after == result_html_data
 
-    # Test that .html file and '_files' folder were created
-    assert format_host_name(test_url) + '.html' in os.listdir(tmpdirname)
-    assert format_host_name(test_url) + '_files' in os.listdir(tmpdirname)
+    assert TEST_DATA.test_data_after == result_html_data
 
-    # Test that files were downloaded
-    files_directory = list(i for i in os.listdir(tmpdirname) if i.endswith('_files'))[0]
+
+def test_main_html_file_creation(tmpdirname):
+    download(TEST_DATA.test_url, tmpdirname)
+    assert format_host_name(TEST_DATA.test_url) + HTML_SUFFIX in os.listdir(tmpdirname)
+
+
+def test_files_folder_creation(tmpdirname):
+    download(TEST_DATA.test_url, tmpdirname)
+    assert format_host_name(TEST_DATA.test_url) + FILES_FOLDER_SUFFIX in os.listdir(tmpdirname)
+
+
+def test_downloaded_files(tmpdirname):
+    download(TEST_DATA.test_url, tmpdirname)
+    files_directory = list(i for i in os.listdir(tmpdirname) if i.endswith(FILES_FOLDER_SUFFIX))[0]
     downloaded_files_path = os.path.join(tmpdirname, files_directory)
     downloaded_files_dir = os.listdir(downloaded_files_path)
 
-    assert RESOURCES.img_png in downloaded_files_dir
-    assert RESOURCES.img_jpg in downloaded_files_dir
-
-    assert RESOURCES.app_css in downloaded_files_dir
-    assert RESOURCES.menu_css in downloaded_files_dir
-
-    assert RESOURCES.hw_js in downloaded_files_dir
-    assert RESOURCES.rel_path_script_js in downloaded_files_dir
-
-    assert RESOURCES.courses_html in downloaded_files_dir
-
-    # Test correctness of downloaded files
     downloaded_png = read_file(os.path.join(downloaded_files_path, RESOURCES.img_png))
     downloaded_jpg = read_file(os.path.join(downloaded_files_path, RESOURCES.img_jpg))
-
     downloaded_app_css = read_file(os.path.join(downloaded_files_path, RESOURCES.app_css))
     downloaded_menu_css = read_file(os.path.join(downloaded_files_path, RESOURCES.menu_css))
-
     downloaded_hw_js = read_file(os.path.join(downloaded_files_path, RESOURCES.hw_js))
     downloaded_rel_path_script_js = read_file(os.path.join(downloaded_files_path, RESOURCES.rel_path_script_js))
-
     downloaded_courses_html = read_file(os.path.join(downloaded_files_path, RESOURCES.courses_html))
 
-    assert downloaded_png == str(test_img_png)
-    assert downloaded_jpg == str(test_img_jpg)
+    assert RESOURCES.img_png in downloaded_files_dir
+    assert RESOURCES.img_jpg in downloaded_files_dir
+    assert RESOURCES.app_css in downloaded_files_dir
+    assert RESOURCES.menu_css in downloaded_files_dir
+    assert RESOURCES.hw_js in downloaded_files_dir
+    assert RESOURCES.rel_path_script_js in downloaded_files_dir
+    assert RESOURCES.courses_html in downloaded_files_dir
 
-    assert downloaded_app_css == test_app_css
-    assert downloaded_menu_css == test_menu_css
+    assert downloaded_png == str(TEST_DATA.test_img_png)
+    assert downloaded_jpg == str(TEST_DATA.test_img_jpg)
+    assert downloaded_app_css == TEST_DATA.test_app_css
+    assert downloaded_menu_css == TEST_DATA.test_menu_css
+    assert downloaded_hw_js == TEST_DATA.test_hw_js
+    assert downloaded_rel_path_script_js == TEST_DATA.test_rel_path_js
+    assert downloaded_courses_html == TEST_DATA.test_data_before
 
-    assert downloaded_hw_js == test_hw_js
-    assert downloaded_rel_path_script_js == test_rel_path_js
 
-    assert downloaded_courses_html == test_courses_html
-
-    # Test log messages (without time recorded)
+def test_logging(caplog, tmpdirname):
+    download(TEST_DATA.test_url, tmpdirname)
     with open('tests/fixtures/test_log_messages.log', mode='r') as f:
         data = [i.strip() for i in f.readlines()]
     assert caplog.messages == data
