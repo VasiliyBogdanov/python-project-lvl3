@@ -1,18 +1,28 @@
-import logging
 import bs4
-import requests
-import page_loader.K as K
+from bs4 import BeautifulSoup
+from collections import namedtuple
+from page_loader.error_handler import download_tag
 from page_loader.formatters import format_filename
 from page_loader.formatters import format_host_name
+from page_loader.progress import bar
 from pathlib import Path
 import os
-from page_loader.error_handler import try_to_download_tag
-import progress.bar
 import re
 from typing import Union
-from typing import Tuple
 from urllib.parse import urljoin
 from urllib.parse import urlparse
+
+
+_tag_names = namedtuple('TAG', 'img link script')
+TAG_NAMES = _tag_names('img', 'link', 'script')
+
+_TAGS = namedtuple('TAGS', 'img link script')
+TAG_LINKS = _TAGS('src', 'href', 'src')
+
+FILES_FOLDER_SUFFIX = '_files'
+HTML_SUFFIX = '.html'
+
+_resource_tags = namedtuple('Resources', 'img link script')
 
 
 def make_modified_path(home_url: str,
@@ -78,11 +88,8 @@ def preprocess_tags(url: str,
 
 def process_tag(tag_link_attr: str,
                 tag: bs4.Tag,
-                session: requests.Session,
                 url: str,
-                directory: str,
-                logger: logging.Logger,
-                bar: progress.bar.Bar) -> None:
+                directory: str) -> None:
     if is_absolute_path(url, tag, tag_link_attr):
         file_to_save = tag[tag_link_attr]
     else:
@@ -93,44 +100,63 @@ def process_tag(tag_link_attr: str,
                   Path(make_modified_path(url,
                                           tag[tag_link_attr])))
 
-    data = try_to_download_tag(session, file_to_save, logger, bar)
+    data = download_tag(file_to_save)
     save_data(data.content, filepath_to_save)
 
     modified_path = make_modified_path(url, tag[tag_link_attr])
     tag[tag_link_attr] = modified_path
 
 
-def process_tags(data: K._resource_tags,
-                 session: requests.Session,
+def process_tags(data: _resource_tags,
                  url: str,
-                 directory: str,
-                 logger: logging.Logger,
-                 bar: progress.bar.Bar) -> None:
-    resources = session, url, directory, logger, bar
+                 directory: str) -> None:
+    resources = url, directory
     for tag in data.img:
-        process_tag(K.TAG_LINKS.img, tag, *resources)
+        process_tag(TAG_LINKS.img, tag, *resources)
     for tag in data.link:
-        process_tag(K.TAG_LINKS.link, tag, *resources)
+        process_tag(TAG_LINKS.link, tag, *resources)
     for tag in data.script:
-        process_tag(K.TAG_LINKS.script, tag, *resources)
+        process_tag(TAG_LINKS.script, tag, *resources)
+    bar.finish()
 
 
-def prepare_resources(soup: bs4.BeautifulSoup,
-                      url: str) -> Tuple[K._resource_tags, int]:
+def process_resources(content: str,
+                      url: str,
+                      directory: str):
+    soup = BeautifulSoup(content, 'html.parser')
     img_tags = preprocess_tags(url,
-                               soup.find_all(K.TAG_NAMES.img,
+                               soup.find_all(TAG_NAMES.img,
                                              src=re.compile(r'\.jpg|\.png')),
-                               K.TAG_LINKS.img)
+                               TAG_LINKS.img)
     link_tags = preprocess_tags(url,
-                                soup.find_all(K.TAG_NAMES.link),
-                                K.TAG_LINKS.link)
+                                soup.find_all(TAG_NAMES.link),
+                                TAG_LINKS.link)
     script_tags = preprocess_tags(url,
-                                  [i for i in soup.find_all(K.TAG_NAMES.script)
-                                   if i.get(K.TAG_LINKS.script)],
-                                  K.TAG_LINKS.script)
+                                  [i for i in soup.find_all(TAG_NAMES.script)
+                                   if i.get(TAG_LINKS.script)],
+                                  TAG_LINKS.script)
 
-    resource_tags = K._resource_tags(img_tags, link_tags, script_tags)
+    resource_tags = _resource_tags(img_tags, link_tags, script_tags)
     resource_len = len([*resource_tags.img,
                         *resource_tags.link,
                         *resource_tags.script])
-    return resource_tags, resource_len
+
+    bar.max = resource_len
+
+    process_tags(resource_tags, url, directory)
+
+    html_path = Path().joinpath(directory,
+                                format_host_name(url) + HTML_SUFFIX)
+
+    with open(html_path, mode='w') as output_html:
+        output_html.write(soup.prettify())
+
+    return html_path
+
+
+def make_directory(url: str,
+                   directory: str) -> None:
+    files_folder_name = format_host_name(url) + FILES_FOLDER_SUFFIX
+    files_path = Path().joinpath(directory, files_folder_name)
+
+    Path.mkdir(files_path, exist_ok=True)

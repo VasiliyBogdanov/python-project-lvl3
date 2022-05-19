@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-from page_loader.cli_parser import cli_arg_parser
+from page_loader.cli import cli
 
 
 def main():
-    cli_arg_parser()
+    cli()
 
 
 if __name__ == '__main__':

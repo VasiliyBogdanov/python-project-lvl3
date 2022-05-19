@@ -1,16 +1,18 @@
-import logging
+import os
+from page_loader.progress import bar
 from page_loader.logger import page_loader_logger
-from requests import HTTPError, ConnectionError
+from pathlib import Path
 import requests
+from requests import HTTPError, ConnectionError
 import sys
+from typing import Tuple
 from typing import Type
 
 logger = page_loader_logger
 
 
 def make_error(err_type: Type[Exception],
-               msg: str,
-               logger: logging.Logger) -> None:
+               msg: str) -> None:
     try:
         raise err_type(msg)
     except err_type:
@@ -18,11 +20,9 @@ def make_error(err_type: Type[Exception],
         raise
 
 
-def try_to_download_tag(session: requests.Session,
-                        download_path,
-                        logger, bar) -> requests.Response:
+def download_tag(download_path: Path) -> requests.Response:
     try:
-        data_to_save = session.get(download_path, stream=True)
+        data_to_save = requests.get(download_path)
         data_to_save.raise_for_status()
     except (HTTPError, ConnectionError):
         logger.error(sys.exc_info()[1])
@@ -36,13 +36,27 @@ def try_to_download_tag(session: requests.Session,
         return data_to_save
 
 
-def try_to_download_page(session: requests.Session,
-                         url: str) -> requests.Response.text:
+def download_page(url: str) -> str:
     try:
-        content = session.get(url)
+        content = requests.get(url)
         content.raise_for_status()
     except (HTTPError, ConnectionError):
         logger.error(sys.exc_info()[1])
         raise
     else:
         return content.text
+
+
+def check_input(url: str,
+                directory: str) -> Tuple[str, str]:
+    if not Path(directory).exists():
+        make_error(OSError,
+                   f'Directory \'{directory}\' does not exist')
+
+    if directory is None:
+        directory = os.getcwd()
+    elif not os.access(directory, mode=os.W_OK):
+        make_error(PermissionError,
+                   f'You don\'t have rights to write to {directory}')
+    url = url.rstrip('/')
+    return url, directory
