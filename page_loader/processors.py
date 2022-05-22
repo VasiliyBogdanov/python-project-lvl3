@@ -1,37 +1,37 @@
 import bs4
-from bs4 import BeautifulSoup
-from collections import namedtuple
-from page_loader.error_handler import download_tag
-from page_loader.formatters import format_filename
-from page_loader.formatters import format_host_name
-from page_loader.progress import bar
+from page_loader.error_handler import download_tag, HTML_SUFFIX
+from page_loader.formatters import (format_filename,
+                                    format_host_name)
 from pathlib import Path
+from progress.bar import Bar
 import os
-import re
-from typing import Union
-from urllib.parse import urljoin
-from urllib.parse import urlparse
+from urllib.parse import (urljoin, urlparse)
 
-
-_tag_names = namedtuple('TAG', 'img link script')
-TAG_NAMES = _tag_names('img', 'link', 'script')
-
-_TAGS = namedtuple('TAGS', 'img link script')
-TAG_LINKS = _TAGS('src', 'href', 'src')
-
+TAG_LINKS = {
+    'img': 'src',
+    'link': 'href',
+    'script': 'src'
+}
 FILES_FOLDER_SUFFIX = '_files'
-HTML_SUFFIX = '.html'
 
-_resource_tags = namedtuple('Resources', 'img link script')
+
+def save_page(html: str,
+              url: str,
+              directory: str) -> None:
+    html_path = Path().joinpath(directory,
+                                format_host_name(url) + HTML_SUFFIX)
+
+    with open(html_path, mode='w') as output_html:
+        output_html.write(html)
 
 
 def make_modified_path(home_url: str,
                        tag_url: str) -> str:
     host = urlparse(home_url).netloc
-    left_side = format_host_name(home_url) + '_files'
+    left_side = format_host_name(home_url) + FILES_FOLDER_SUFFIX
     path, ext = os.path.splitext(tag_url)
     path = path[1:] if path.startswith('/') else path
-    ext = ext if ext else '.html'
+    ext = ext if ext else HTML_SUFFIX
 
     if urlparse(path).scheme:
         right_side = format_filename(path) + ext
@@ -75,83 +75,40 @@ def save_data(data: bytes,
         f.write(data)
 
 
-def preprocess_tags(url: str,
-                    tags: Union[bs4.ResultSet, list],
-                    tag_link_attr: str) -> list:
-    """Filter out tags with links to external resources."""
-    output = []
+def download_resources(url: str,
+                       directory: str,
+                       tags: list) -> None:
+    bar = Bar(max=len(tags))
     for tag in tags:
-        if not is_external_link(url, tag, tag_link_attr):
-            output.append(tag)
-    return output
+        if is_absolute_path(url, tag, TAG_LINKS[tag.name]):
+            file_to_save = tag[TAG_LINKS[tag.name]]
+        else:
+            file_to_save = make_path_to_download(url, tag[TAG_LINKS[tag.name]])
 
+        filepath_to_save = Path\
+            .joinpath(Path(directory),
+                      Path(make_modified_path(url,
+                                              tag[TAG_LINKS[tag.name]])))
 
-def process_tag(tag_link_attr: str,
-                tag: bs4.Tag,
-                url: str,
-                directory: str) -> None:
-    if is_absolute_path(url, tag, tag_link_attr):
-        file_to_save = tag[tag_link_attr]
-    else:
-        file_to_save = make_path_to_download(url, tag[tag_link_attr])
-
-    filepath_to_save = Path\
-        .joinpath(Path(directory),
-                  Path(make_modified_path(url,
-                                          tag[tag_link_attr])))
-
-    data = download_tag(file_to_save)
-    save_data(data.content, filepath_to_save)
-
-    modified_path = make_modified_path(url, tag[tag_link_attr])
-    tag[tag_link_attr] = modified_path
-
-
-def process_tags(data: _resource_tags,
-                 url: str,
-                 directory: str) -> None:
-    resources = url, directory
-    for tag in data.img:
-        process_tag(TAG_LINKS.img, tag, *resources)
-    for tag in data.link:
-        process_tag(TAG_LINKS.link, tag, *resources)
-    for tag in data.script:
-        process_tag(TAG_LINKS.script, tag, *resources)
+        data = download_tag(file_to_save, bar)
+        save_data(data.content, filepath_to_save)
     bar.finish()
 
 
-def process_resources(content: str,
-                      url: str,
-                      directory: str):
-    soup = BeautifulSoup(content, 'html.parser')
-    img_tags = preprocess_tags(url,
-                               soup.find_all(TAG_NAMES.img,
-                                             src=re.compile(r'\.jpg|\.png')),
-                               TAG_LINKS.img)
-    link_tags = preprocess_tags(url,
-                                soup.find_all(TAG_NAMES.link),
-                                TAG_LINKS.link)
-    script_tags = preprocess_tags(url,
-                                  [i for i in soup.find_all(TAG_NAMES.script)
-                                   if i.get(TAG_LINKS.script)],
-                                  TAG_LINKS.script)
+def parse_resources(url: str,
+                    soup: bs4.BeautifulSoup) -> list:
+    tags = soup.find_all(['img', 'link', 'script'])
 
-    resource_tags = _resource_tags(img_tags, link_tags, script_tags)
-    resource_len = len([*resource_tags.img,
-                        *resource_tags.link,
-                        *resource_tags.script])
+    resources = []
+    for tag in tags:
+        if tag.name == 'script' and tag.get(TAG_LINKS[tag.name]) is None:
+            continue
+        if is_external_link(url, tag, TAG_LINKS[tag.name]):
+            continue
 
-    bar.max = resource_len
+        resources.append(tag)
 
-    process_tags(resource_tags, url, directory)
-
-    html_path = Path().joinpath(directory,
-                                format_host_name(url) + HTML_SUFFIX)
-
-    with open(html_path, mode='w') as output_html:
-        output_html.write(soup.prettify())
-
-    return html_path
+    return resources
 
 
 def make_directory(url: str,
@@ -160,3 +117,15 @@ def make_directory(url: str,
     files_path = Path().joinpath(directory, files_folder_name)
 
     Path.mkdir(files_path, exist_ok=True)
+
+
+def modify_html(url: str,
+                directory: str,
+                tags: list) -> str:
+    for tag in tags:
+        modified_path = make_modified_path(url, tag[TAG_LINKS[tag.name]])
+        tag[TAG_LINKS[tag.name]] = modified_path
+
+    html_path = Path().joinpath(directory,
+                                format_host_name(url) + HTML_SUFFIX)
+    return str(html_path)

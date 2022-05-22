@@ -1,12 +1,17 @@
 import os
-from page_loader.progress import bar
 from page_loader.logger import page_loader_logger
 from pathlib import Path
+import progress.bar
 import requests
-from requests import HTTPError, ConnectionError
+from requests import (ConnectionError,
+                      HTTPError,
+                      Timeout,
+                      )
 import sys
 from typing import Tuple
 from typing import Type
+
+HTML_SUFFIX = '.html'
 
 logger = page_loader_logger
 
@@ -20,11 +25,12 @@ def make_error(err_type: Type[Exception],
         raise
 
 
-def download_tag(download_path: Path) -> requests.Response:
+def download_tag(download_path: Path,
+                 bar: progress.bar.Bar) -> requests.Response:
     try:
         data_to_save = requests.get(download_path)
         data_to_save.raise_for_status()
-    except (HTTPError, ConnectionError):
+    except (HTTPError, ConnectionError, Timeout):
         logger.error(sys.exc_info()[1])
         raise
     else:
