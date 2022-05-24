@@ -18,11 +18,12 @@ RESOURCES = _RESOURCES('ru-hexlet-io-assets-python.png',
                        'ru-hexlet-io-relpathscript.js',
                        'ru-hexlet-io-courses.html',
                        )
-_TEST_DATA = namedtuple('TEST_DATA', ['test_url', 'test_404_url', 'test_data_before', 'test_data_after',
+_TEST_DATA = namedtuple('TEST_DATA', ['test_url', 'test_404_url', 'test_empty', 'test_data_before', 'test_data_after',
                                       'test_img_png', 'test_img_jpg', 'test_app_css',
                                       'test_menu_css', 'test_hw_js', 'test_rel_path_js'])
 TEST_DATA = _TEST_DATA('https://ru.hexlet.io/courses',
                        'https://whatever.com/',
+                       'https://empty.com/',
                        read_file('tests/fixtures/test_html_before.html'),
                        read_file('tests/fixtures/test_html_after.html'),
                        read_file("tests/fixtures/python.png", mode='rb'),
@@ -56,6 +57,8 @@ def mock_site():
                        text=TEST_DATA.test_data_before, reason='OK', status_code=200)
         m.register_uri('GET', TEST_DATA.test_404_url,
                        text="Oops", reason='Client Error', status_code=404)
+        m.register_uri('GET', TEST_DATA.test_empty,
+                       text='Empty', reason='OK', status_code=200)
         yield
 
 

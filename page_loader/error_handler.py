@@ -8,7 +8,6 @@ from requests import (ConnectionError,
                       Timeout,
                       )
 import sys
-from typing import Tuple
 from typing import Type
 
 HTML_SUFFIX = '.html'
@@ -53,8 +52,7 @@ def download_page(url: str) -> str:
         return content.text
 
 
-def check_input(url: str,
-                directory: str) -> Tuple[str, str]:
+def check_directory(directory: str) -> str:
     if not Path(directory).exists():
         make_error(OSError,
                    f'Directory \'{directory}\' does not exist')
@@ -64,5 +62,4 @@ def check_input(url: str,
     elif not os.access(directory, mode=os.W_OK):
         make_error(PermissionError,
                    f'You don\'t have rights to write to {directory}')
-    url = url.rstrip('/')
-    return url, directory
+    return directory

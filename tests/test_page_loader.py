@@ -67,3 +67,10 @@ def test_logging(caplog, tmpdirname):
     with open('tests/fixtures/test_log_messages.log', mode='r') as f:
         data = [i.strip() for i in f.readlines()]
     assert caplog.messages == data
+
+
+def test_empty_html(tmpdirname):
+    download(TEST_DATA.test_empty, tmpdirname)
+    directory = os.listdir(tmpdirname)
+    assert 'empty-com.html' in directory
+    assert 'empty-com_files' not in directory
