@@ -1,7 +1,8 @@
 import os
 from page_loader.formatters import format_host_name
 from page_loader.page_loader import download
-from page_loader.processors import HTML_SUFFIX, FILES_FOLDER_SUFFIX
+from page_loader.paths import FILES_FOLDER_SUFFIX
+from page_loader.errors import HTML_SUFFIX
 from pathlib import Path
 from tests.conftest import read_file
 from tests.conftest import RESOURCES

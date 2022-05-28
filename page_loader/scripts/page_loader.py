@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from page_loader.cli import parse_arguments
+from page_loader.parsers import parse_cli_arguments
 from page_loader.page_loader import download
 from requests import (HTTPError,
                       ConnectionError,
@@ -8,7 +8,7 @@ import sys
 
 
 def main():
-    url, output_path = parse_arguments()
+    url, output_path = parse_cli_arguments()
 
     try:
         result = download(url=url, directory=output_path)
