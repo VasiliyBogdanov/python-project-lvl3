@@ -10,4 +10,4 @@ test-coverage:
 	poetry run pytest --cov=page_loader --cov-report xml
 lint:
 	poetry run flake8 page_loader
-.PHONY: instal build package-install test test-coverage lint 
+.PHONY: install build package-install test test-coverage lint 
