@@ -1,13 +1,13 @@
 import os
-from page_loader.errors import (HTML_SUFFIX,
-                                make_error)
+from page_loader.errors import make_error
 from page_loader.formatters import (format_filename,
                                     format_host_name,
                                     )
 from pathlib import Path
 import requests
 from urllib.parse import (urljoin,
-                          urlparse)
+                          urlparse,
+                          )
 
 TAG_LINKS = {
     'img': 'src',
@@ -15,6 +15,7 @@ TAG_LINKS = {
     'script': 'src'
 }
 FILES_FOLDER_SUFFIX = '_files'
+HTML_SUFFIX = '.html'
 
 
 def check_directory(directory: str) -> str:

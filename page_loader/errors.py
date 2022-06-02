@@ -2,7 +2,6 @@ from page_loader.logger import page_loader_logger
 import sys
 from typing import Type
 
-HTML_SUFFIX = '.html'
 logger = page_loader_logger
 
 

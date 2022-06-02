@@ -1,5 +1,5 @@
-from page_loader.errors import HTML_SUFFIX
 from page_loader.formatters import format_host_name
+from page_loader.paths import HTML_SUFFIX
 from pathlib import Path
 import os
 

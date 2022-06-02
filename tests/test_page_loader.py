@@ -1,18 +1,20 @@
 import os
 from page_loader.formatters import format_host_name
 from page_loader.page_loader import download
-from page_loader.paths import FILES_FOLDER_SUFFIX
-from page_loader.errors import HTML_SUFFIX
+from page_loader.paths import (FILES_FOLDER_SUFFIX,
+                               HTML_SUFFIX,
+                               )
 from pathlib import Path
-from tests.conftest import read_file
-from tests.conftest import RESOURCES
-from tests.conftest import TEST_DATA
+from tests.conftest import (read_file,
+                            RESOURCES,
+                            TEST_DATA,
+                            )
 
 
 def test_download_path_creation(tmpdirname):
     result = download(TEST_DATA.test_url, tmpdirname)
 
-    assert Path(result) == Path(os.path.join(tmpdirname, format_host_name(TEST_DATA.test_url) + '.html'))
+    assert Path(result) == Path(os.path.join(tmpdirname, format_host_name(TEST_DATA.test_url) + HTML_SUFFIX))
 
 
 def test_downloaded_html_structure(tmpdirname):
