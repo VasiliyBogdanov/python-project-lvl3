@@ -9,9 +9,8 @@ Downloads web page with it's resources.
 ### Specs:
 - can be used as a library or through CLI
 - works with __static__ web pages, only downloads __local__ resources from 'img', 'link' and 'script' tags
-- allowed img formats are .png and .jpg
 - downloads web pages inside 'link' tags (without downloading their resources)
-- downloads resource from 'script' tag only if it has src attribute. Also ignores inline code inside 'script' tags  
+- ignores inline code inside 'script' tags  
 
 ### Requirements:
 - Python 3.8 or higher
