@@ -1,6 +1,7 @@
-from page_loader.logger import page_loader_logger
 import sys
 from typing import Type
+
+from page_loader.logger import page_loader_logger
 
 logger = page_loader_logger
 

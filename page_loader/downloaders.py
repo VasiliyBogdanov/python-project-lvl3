@@ -1,17 +1,19 @@
+import sys
+from pathlib import Path
+
+import requests
+from progress.bar import Bar
+from requests import (ConnectionError,
+                      HTTPError,
+                      Timeout,
+                      )
+
 from page_loader.logger import page_loader_logger
 from page_loader.paths import (is_absolute_path,
                                make_assets_directory,
                                make_path_to_download,
                                )
 from page_loader.savers import save_data
-from pathlib import Path
-from progress.bar import Bar
-import requests
-from requests import (ConnectionError,
-                      HTTPError,
-                      Timeout,
-                      )
-import sys
 
 logger = page_loader_logger
 

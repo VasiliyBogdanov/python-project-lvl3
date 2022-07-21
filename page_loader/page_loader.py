@@ -1,3 +1,6 @@
+import os
+from typing import Union
+
 from page_loader.downloaders import (download_page,
                                      download_resources,
                                      )
@@ -9,7 +12,7 @@ from page_loader.savers import save_page
 logger = page_loader_logger
 
 
-def download(url: str, directory: str = None) -> str:
+def download(url: str, directory: Union[str, os.PathLike] = None) -> str:
     """Downloads webpage with its local resources
      inside 'img', 'link' and 'script' tags.
 

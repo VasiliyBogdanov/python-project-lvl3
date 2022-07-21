@@ -26,6 +26,7 @@ def test_downloaded_html_structure(tmpdirname):
 
 def test_main_html_file_creation(tmpdirname):
     download(TEST_DATA.test_url, tmpdirname)
+
     assert format_host_name(TEST_DATA.test_url) + HTML_SUFFIX in os.listdir(tmpdirname)
 
 
@@ -36,7 +37,7 @@ def test_files_folder_creation(tmpdirname):
 
 def test_downloaded_files(tmpdirname):
     download(TEST_DATA.test_url, tmpdirname)
-    files_directory = list(i for i in os.listdir(tmpdirname) if i.endswith(FILES_FOLDER_SUFFIX))[0]
+    files_directory = next((i for i in os.listdir(tmpdirname) if i.endswith(FILES_FOLDER_SUFFIX)), None)
     downloaded_files_path = os.path.join(tmpdirname, files_directory)
     downloaded_files_dir = os.listdir(downloaded_files_path)
 

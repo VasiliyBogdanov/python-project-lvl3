@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-from page_loader.parsers import parse_cli_arguments
-from page_loader.page_loader import download
+import sys
+
 from requests import (HTTPError,
                       ConnectionError,
                       Timeout)
-import sys
+
+from page_loader.page_loader import download
+from page_loader.parsers import parse_cli_arguments
 
 
 def main():
-    url, output_path = parse_cli_arguments()
+    url, directory = parse_cli_arguments()
 
     try:
-        result = download(url=url, directory=output_path)
+        result = download(url=url, directory=directory)
     except (ConnectionError,
             HTTPError,
             OSError,
